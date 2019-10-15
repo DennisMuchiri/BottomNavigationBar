@@ -2,6 +2,7 @@ package com.ismaeldivita.chipnavigation.view
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.view.View
@@ -13,6 +14,7 @@ import com.ismaeldivita.chipnavigation.R
 import com.ismaeldivita.chipnavigation.model.MenuItem
 import com.ismaeldivita.chipnavigation.util.*
 import com.ismaeldivita.chipnavigation.util.setColorStateListAnimator
+import java.lang.Exception
 
 internal class HorizontalMenuItemView @JvmOverloads constructor(
     context: Context,
@@ -28,11 +30,19 @@ internal class HorizontalMenuItemView @JvmOverloads constructor(
         layoutParams = LayoutParams(0, WRAP_CONTENT, 1F)
     }
 
-    override fun bind(item: MenuItem) {
+    override fun bind(item: MenuItem, mytypeface: Typeface?) {
         id = item.id
         isEnabled = item.enabled
 
         title.text = item.title
+        if (mytypeface != null) {
+            try {
+                title.typeface = mytypeface
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         title.setTextColor(item.textColor)
 
         icon.setImageResource(item.icon)

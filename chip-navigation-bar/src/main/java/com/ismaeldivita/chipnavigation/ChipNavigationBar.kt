@@ -1,25 +1,35 @@
 package com.ismaeldivita.chipnavigation
 
-import android.content.Context
-import android.support.annotation.MenuRes
-import android.support.design.widget.CoordinatorLayout
-import android.util.AttributeSet
-import android.widget.LinearLayout
 //import androidx.annotation.MenuRes
 //import androidx.coordinatorlayout.widget.CoordinatorLayout
-import com.ismaeldivita.chipnavigation.behavior.HideOnScrollBehavior
-import com.ismaeldivita.chipnavigation.model.MenuParser
-import com.ismaeldivita.chipnavigation.util.getChildren
-import com.ismaeldivita.chipnavigation.view.HorizontalMenuItemView
-import android.view.View
 //import androidx.annotation.IntDef
 //import androidx.annotation.IntRange
-import android.support.annotation.IntRange;
-import android.support.annotation.IntDef;
+import android.content.Context
+import android.graphics.Paint
+import android.graphics.Typeface
+import android.support.annotation.FontRes
+import android.support.annotation.IntRange
+import android.support.annotation.MenuRes
+import android.support.design.widget.CoordinatorLayout
+import android.support.v4.content.res.ResourcesCompat
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextPaint
+import android.text.style.TypefaceSpan
+import android.util.AttributeSet
+import android.util.Log
+import android.view.View
+import android.widget.LinearLayout
+import com.ismaeldivita.chipnavigation.behavior.HideOnScrollBehavior
+import com.ismaeldivita.chipnavigation.model.MenuItem
+import com.ismaeldivita.chipnavigation.model.MenuParser
 import com.ismaeldivita.chipnavigation.util.applyWindowInsets
 import com.ismaeldivita.chipnavigation.util.forEachChild
+import com.ismaeldivita.chipnavigation.util.getChildren
+import com.ismaeldivita.chipnavigation.view.HorizontalMenuItemView
 import com.ismaeldivita.chipnavigation.view.MenuItemView
 import com.ismaeldivita.chipnavigation.view.VerticalMenuItemView
+
 
 class ChipNavigationBar @JvmOverloads constructor(
     context: Context,
@@ -34,6 +44,7 @@ class ChipNavigationBar @JvmOverloads constructor(
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.ChipNavigationBar)
 
+        val menuFontFamily = a.getResourceId(R.styleable.ChipNavigationBar_cnb_menuFontFamily,-1)
         val menuResource = a.getResourceId(R.styleable.ChipNavigationBar_cnb_menuResource, -1)
         val hideOnScroll = a.getBoolean(R.styleable.ChipNavigationBar_cnb_hideOnScroll, false)
         val minExpanded = a.getDimension(R.styleable.ChipNavigationBar_cnb_minExpandedWidth, 0F)
@@ -53,7 +64,7 @@ class ChipNavigationBar @JvmOverloads constructor(
         setMenuOrientation(orientation)
 
         if (menuResource >= 0) {
-            setMenuResource(menuResource)
+            setMenuResource(menuResource,menuFontFamily)
         }
 
         setMinimumExpandedWidth(minExpanded.toInt())
@@ -69,7 +80,16 @@ class ChipNavigationBar @JvmOverloads constructor(
      *
      * @param menuRes Resource ID for an XML layout resource to load
      */
-    fun setMenuResource(@MenuRes menuRes: Int) {
+    fun setMenuResource(@MenuRes menuRes: Int,@FontRes menuFontFamily:Int) {
+        var typeface:Typeface?
+        typeface=null;
+        if(menuFontFamily!=-1) {
+            try {
+                typeface = ResourcesCompat.getFont(context, menuFontFamily)
+            }catch (e: Exception) {
+               e.printStackTrace();
+            }
+        }
         val menu = (MenuParser(context).parse(menuRes))
         val childListener: (View) -> Unit = { view ->
             val id = view.id
@@ -78,15 +98,32 @@ class ChipNavigationBar @JvmOverloads constructor(
         }
 
         removeAllViews()
-
         menu.items.forEach {
             val itemView = createMenuItem().apply {
-                bind(it)
+                bind(it,typeface)
                 setOnClickListener(childListener)
             }
             addView(itemView)
         }
+
+        /*val mm_typeface = Typeface.createFromAsset(context.assets,"mm.ttf")
+        for (i in 0 until menu.items.size) {
+            val menuItem = menu.items.get(i)
+            if (menuItem != null) {
+                applyFont(menuItem, mm_typeface)
+            }
+        }*/
     }
+   fun applyFont(menuItem: MenuItem, mm_typeface:Typeface){
+       val spannableString = SpannableString(menuItem.title)
+       spannableString.setSpan(
+           CustomTypeFace("", mm_typeface),
+           0,
+           spannableString.length,
+           Spanned.SPAN_INCLUSIVE_INCLUSIVE
+       )
+       menuItem.title=spannableString
+   }
 
     /**
      * Set the menu orientation
@@ -313,5 +350,36 @@ class ChipNavigationBar @JvmOverloads constructor(
     enum class MenuOrientation {
         HORIZONTAL,
         VERTICAL
+    }
+
+    private inner class CustomTypeFace(family: String, val typefaceVal: Typeface) : TypefaceSpan(family) {
+
+        override fun updateDrawState(textPaint: TextPaint) {
+            applyCustomTypeFace(textPaint, typefaceVal)
+        }
+
+        override fun updateMeasureState(textPaint: TextPaint) {
+            applyCustomTypeFace(textPaint, typefaceVal)
+        }
+
+        fun applyCustomTypeFace(paint: Paint, typeface: Typeface) {
+            val oldStyle: Int
+            val old = paint.getTypeface()
+            if (old == null) {
+                oldStyle = 0
+            } else {
+                oldStyle = old!!.getStyle()
+            }
+
+            val fake = oldStyle and typeface.style.inv()
+            if (fake and Typeface.BOLD != 0) {
+                paint.setFakeBoldText(true)
+            }
+
+            if (fake and Typeface.ITALIC != 0) {
+                paint.setTextSkewX(-0.25f)
+            }
+            paint.setTypeface(typeface)
+        }
     }
 }

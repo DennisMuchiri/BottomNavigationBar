@@ -17,6 +17,7 @@ import com.ismaeldivita.chipnavigation.util.onEndListener
 import com.ismaeldivita.chipnavigation.util.setColorStateListAnimator
 import com.ismaeldivita.chipnavigation.util.setCustomRipple
 import com.ismaeldivita.chipnavigation.util.updateLayoutParams
+import java.lang.Exception
 
 internal class VerticalMenuItemView @JvmOverloads constructor(
     context: Context,
@@ -44,11 +45,18 @@ internal class VerticalMenuItemView @JvmOverloads constructor(
         originalTypeFace = countLabel.typeface
     }
 
-    override fun bind(item: MenuItem) {
+    override fun bind(item: MenuItem,mytypeface: Typeface?) {
         id = item.id
         isEnabled = item.enabled
 
         title.text = item.title
+        if (mytypeface != null) {
+            try {
+                title.typeface = mytypeface
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
         title.setColorStateListAnimator(
             color = item.textColor,
             unselectedColor = item.unselectedColor,

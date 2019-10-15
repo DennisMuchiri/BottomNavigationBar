@@ -25,6 +25,7 @@
         android:layout_gravity="bottom"
         android:background="@color/white"
         android:elevation="16dp"
+        app:cnb_menuFontFamily="@font/mm"
         app:cnb_addBottomInset="true"
         app:cnb_menuResource="@menu/test"
         app:cnb_orientationMode="horizontal" />
